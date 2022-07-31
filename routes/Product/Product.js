@@ -10,8 +10,6 @@ const Categories = require('../../models/Categories');
 //importing middleware for admin checking 
 const FetchAdmin = require('../../middlewares/FetchAdmin');
 
-
-
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './uploads/products/')
@@ -76,8 +74,6 @@ router.post('/add',
                         }
                     });
                 }
-                console.log(newCategories);
-
                 await Categories.updateOne({ $addToSet: { products: { $each: newCategories } } });
                 // await Categories.updateOne({$pushAll: {blogs:['google','fb']}},{upsert:true});
             }
@@ -182,8 +178,7 @@ router.put('/undo'
 // Edit Product :: Admin Access 
 router.put('/edit',
     [
-        body('name', 'Name Should be atleast 5 characters').isLength({ min: 5 }),
-        body('price', 'Price Should not be empty').isNumeric()
+        body('name', 'Name Should be atleast 5 characters').isLength({ min: 5 })
     ],
     FetchAdmin,
     upload.array('images', 5),
@@ -199,69 +194,51 @@ router.put('/edit',
             if (!product) {
                 return res.status(400).json({ success: false, msg: "Product is Not Available" })
             }
-            if (!req.body.category) {
+            if (!req.body.category || !req.body.subCategory) {
                 return res.status(400).json({ success: false, msg: "Category Required" });
             }
-            if (req.body.category === "automobile") {
-                product.name = req.body.name || product.name
-                product.category = req.body.category || product.category
-                product.description = req.body.description ? req.body.description : product.description
-                product.subCategory = req.body.subCategory || product.subCategory
-                product.details = {
-                    brand: req.body.brand ? req.body.brand : product.details.brand,
-                    modelname: req.body.modelname ? req.body.modelname : product.details.modelname,
-                    fuelType: req.body.fuelType ? req.body.fuelType : product.details.fuelType
+
+            const { name,
+                shortDescription,
+                description,
+                category,
+                subCategory,
+                length,
+                height,
+                width,
+                color,
+                weight,
+                diamerter,
+                price,
+                range
+            } = req.body;
+
+            // save a product 
+            product = new Product({
+                name: name ? name : product.name,
+                shortDescription: shortDescription ? shortDescription : product.shortDescription,
+                description: description ? description : product.description,
+                category: category ? category : product.category,
+                subCategory: subCategory ? subCategory : product.subCategory,
+                price: price ? price : product.price ? product.price : null,
+                range: range ? range : product.range,
+                details: {
+                    length: length ? length : product.length,
+                    height: height ? height : product.height,
+                    width: width ? width : product.width,
+                    weight: weight ? weight : product.weight,
+                    diamerter: diamerter ? diamerter : product.diamerter,
+                    color: color ? color : product.color,
                 },
-                    product.price = req.body.price || product.price
-
-                if (req.files) {
-                    product.img = req.files.map(element => {
-                        return element.path
-                    })
-                }
-                let newProduct = await product.save();
-                return res.status(200).json({ success: true, product: newProduct });
+            })
+            if (req.files) {
+                product.img = req.files.map(element => {
+                    return element.path
+                })
             }
-            if (req.body.category === "metal") {
-                product.name = req.body.name || product.name
-                product.category = req.body.category || product.category
-                product.description = req.body.description || product.description
-                product.subCategory = req.body.subCategory || product.subCategory
-                product.details = {
-                    brand: req.body.brand ? req.body.brand : product.details.brand,
-                    modelname: req.body.modelname ? req.body.modelname : product.details.modelname,
-                    metalType: req.body.metalType ? req.body.metalType : product.details.metalType,
-                }
-                product.price = req.body.price || product.price
+            let newProduct = await product.save();
+            return res.status(200).json({ success: true, data: newProduct });
 
-                if (req.files) {
-                    product.img = req.files.map(element => {
-                        return element.path
-                    })
-                }
-                let newProduct = await product.save();
-                res.status(200).json({ success: true, product: newProduct });
-            }
-            if (req.body.category === "copper") {
-                product.name = req.body.name || product.name
-                product.category = req.body.category || product.category
-                product.description = req.body.description || product.description
-                product.subCategory = req.body.subCategory || product.subCategory
-                product.details = {
-                    brand: req.body.brand ? req.body.brand : product.details.brand,
-                    modelname: req.body.modelname ? req.body.modelname : product.details.modelname,
-                    metalType: req.body.metalType ? req.body.metalType : product.details.metalType,
-                }
-                product.price = req.body.price || product.price
-
-                if (req.files) {
-                    product.img = req.files.map(element => {
-                        return element.path
-                    })
-                }
-                let newProduct = await product.save();
-                res.status(200).json({ success: true, product: newProduct });
-            }
 
         } catch (error) {
             console.log(error);

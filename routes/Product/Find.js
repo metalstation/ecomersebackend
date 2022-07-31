@@ -15,6 +15,10 @@ router.get('/all', Pagination(Product), async (req, res) => {
         if (req.pagination) {
             return res.status(200).json({ success: true, pagination: req.pagination })
         }
+        else {
+            let alll = await Product.find();
+            return res.status(200).json({ success: true, pagination: alll })
+        }
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ success: false, msg: 'Internal Server Error' });
