@@ -54,29 +54,29 @@ router.post('/add',
             let allCategories = await Categories.findOne();
 
             // first time create model if there is no data 
-            if (!allCategories) {
-                console.log('categories not found')
-                let a = new Categories({
-                    products: req.body.subCategory
-                })
-                await a.save();
-            }
-            // if we have the data then add new categories 
-            else {
-                let { subCategory } = req.body;
-                console.log(subCategory);
-                let newCategories = [];
+            // if (!allCategories) {
+            //     console.log('categories not found')
+            //     let a = new Categories({
+            //         products: req.body.subCategory
+            //     })
+            //     await a.save();
+            // }
+            // // if we have the data then add new categories 
+            // else {
+            //     let { subCategory } = req.body;
+            //     console.log(subCategory);
+            //     let newCategories = [];
 
-                if (subCategory.length) {
-                    subCategory.forEach(element => {
-                        if (!allCategories.products.includes(element)) {
-                            newCategories.push(element);
-                        }
-                    });
-                }
-                await Categories.updateOne({ $addToSet: { products: { $each: newCategories } } });
-                // await Categories.updateOne({$pushAll: {blogs:['google','fb']}},{upsert:true});
-            }
+            //     if (subCategory.length) {
+            //         subCategory.forEach(element => {
+            //             if (!allCategories.products.includes(element)) {
+            //                 newCategories.push(element);
+            //             }
+            //         });
+            //     }
+            //     await Categories.updateOne({ $addToSet: { products: { $each: newCategories } } });
+            //     // await Categories.updateOne({$pushAll: {blogs:['google','fb']}},{upsert:true});
+            // }
 
             const { name,
                 shortDescription,
@@ -90,9 +90,10 @@ router.post('/add',
                 weight,
                 diamerter,
                 price,
-                range
+                minPrice,
+                maxPrice,
+                table
             } = req.body;
-
             // save a product 
             let product = new Product({
                 name: name,
@@ -101,7 +102,9 @@ router.post('/add',
                 category: category,
                 subCategory: subCategory,
                 price: price ? price : null,
-                range: range,
+                minPrice: minPrice ? minPrice : price,
+                maxPrice: maxPrice ? maxPrice : price,
+                table: JSON.parse(table),
                 details: {
                     length: length,
                     height: height,
@@ -116,7 +119,6 @@ router.post('/add',
             })
             let newProduct = await product.save();
             return res.status(200).json({ success: true, data: newProduct });
-
 
         } catch (error) {
             console.log(error.message);
@@ -187,6 +189,8 @@ router.put('/edit',
         // if (!errors.isEmpty()) {
         //     return res.status(401).json({ success:false , msg: "All Fields are Required" })
         // }
+
+
         try {
 
             let product = await Product.findByIdAndUpdate(req.body.id);
@@ -210,27 +214,29 @@ router.put('/edit',
                 weight,
                 diamerter,
                 price,
-                range
+                minPrice,
+                maxPrice,
+                table,
             } = req.body;
 
-            // save a product 
-            product = new Product({
-                name: name ? name : product.name,
-                shortDescription: shortDescription ? shortDescription : product.shortDescription,
-                description: description ? description : product.description,
-                category: category ? category : product.category,
-                subCategory: subCategory ? subCategory : product.subCategory,
-                price: price ? price : product.price ? product.price : null,
-                range: range ? range : product.range,
-                details: {
-                    length: length ? length : product.length,
-                    height: height ? height : product.height,
-                    width: width ? width : product.width,
-                    weight: weight ? weight : product.weight,
-                    diamerter: diamerter ? diamerter : product.diamerter,
-                    color: color ? color : product.color,
-                },
-            })
+            // save  to an existing product 
+            product.name = name ? name : product.name
+            product.shortDescription = shortDescription ? shortDescription : product.shortDescription
+            product.description = description ? description : product.description
+            product.category = category ? category : product.category
+            product.subCategory = subCategory ? subCategory : product.subCategory
+            product.price = price ? price : product.price ? product.price : null
+            product.minPrice = minPrice ? minPrice : product.minPrice
+            product.maxPrice = maxPrice ? minPrice : product.minPrice
+            product.table = table ? JSON.stringify(table) : product.table
+
+            details.length = length ? length : product.length
+            details.height = height ? height : product.height
+            details.width = width ? width : product.width
+            details.weight = weight ? weight : product.weight
+            details.diamerter = diamerter ? diamerter : product.diamerter
+            details.color = color ? color : product.color
+
             if (req.files) {
                 product.img = req.files.map(element => {
                     return element.path
@@ -238,9 +244,8 @@ router.put('/edit',
             }
             let newProduct = await product.save();
             return res.status(200).json({ success: true, data: newProduct });
-
-
-        } catch (error) {
+        }
+        catch (error) {
             console.log(error);
             res.status(500).json({ success: false, msg: 'Internal Server Error' });
         }

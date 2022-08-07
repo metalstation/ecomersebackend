@@ -21,8 +21,8 @@ function Pagination(model) {
       pagination.current = page; // set current page 
 
 
-      // if there is no page and limit 
-      if (!page && !limit) {
+      // if there is no page and no limit 
+      if (!page && !limit && category && search) {
         endIndex = length;
         startIndex = 0;
         pagination.results = await model.find().skip(startIndex).limit(endIndex);
@@ -53,15 +53,15 @@ function Pagination(model) {
       }
 
       // searching 
-      if (search) {
-        query = {
-          $or: [
-            { "name": { $regex: `${search}`, $options: 'i' } },
-            { "category": { $regex: `${search}`, $options: 'i' } },
-          ]
-        }
-        pagination.results = await model.find(query).skip(startIndex).limit(limit);
-      }
+      // if (search) {
+      //   query = {
+      //     $or: [
+      //       { "name": { $regex: `${search}`, $options: 'i' } },
+      //       { "category": { $regex: `${search}`, $options: 'i' } },
+      //     ]
+      //   }
+      //   pagination.results = await model.find(query).skip(startIndex).limit(limit);
+      // }
 
 
 

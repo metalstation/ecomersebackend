@@ -7,10 +7,10 @@ const Product = require('../../models/Product');
 const User = require('../../models/User');
 
 // pagination middleware ; 
-const Pagination = require('../../middlewares/Pagination');
+const ProductPagination = require('../../middlewares/ProductsPagination');
 const { default: mongoose } = require('mongoose');
 
-router.get('/all', Pagination(Product), async (req, res) => {
+router.get('/all', ProductPagination(Product), async (req, res) => {
     try {
         if (req.pagination) {
             return res.status(200).json({ success: true, pagination: req.pagination })
@@ -24,7 +24,7 @@ router.get('/all', Pagination(Product), async (req, res) => {
         res.status(500).json({ success: false, msg: 'Internal Server Error' });
     }
 })
-router.get('/category', Pagination(Product), async (req, res) => {
+router.get('/category', ProductPagination(Product), async (req, res) => {
     try {
         if (req.pagination) {
             return res.status(200).json({ success: true, pagination: req.pagination })

@@ -43,6 +43,18 @@ const ProductSchema = new mongoose.Schema({
         },
         _id: false,
     },
+    table: [
+        {
+            fieldName: {
+                type: String,
+            },
+            value: {
+                type: String,
+            },
+            _id: false,
+        },
+    ],
+
     isDeleted: {
         type: Boolean,
         required: false,
@@ -52,8 +64,12 @@ const ProductSchema = new mongoose.Schema({
         type: Number,
         required: false
     },
-    range: {
-        type: String,
+    minPrice: {
+        type: Number,
+        required: false
+    },
+    maxPrice: {
+        type: Number,
         required: false
     },
     img: {

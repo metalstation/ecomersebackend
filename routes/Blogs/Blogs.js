@@ -11,6 +11,7 @@ const Categories = require('../../models/Categories');
 const Blog = require('../../models/Blog');
 const Pagination = require('../../middlewares/Pagination');
 
+const BlogsPagination = require('../../middlewares/BlogsPagination');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -96,16 +97,16 @@ router.post('/add',
     })
 
 // Get By Blogs by category :  
-router.get('/getall', Pagination(Blog),
+router.get('/getall', BlogsPagination(Blog),
     async (req, res) => {
 
         try {
-            if (req.query.category === '' && req.query.page === '') {
-                const blogs = await Blog.find();
-                return res.status(200).json({ success: true, data: blogs })
-            }
+            // if (req.query.category === '' && req.query.page === '') {
+            //     const blogs = await Blog.find();
+            //     return res.status(200).json({ success: true, data: blogs })
+            // }
 
-            res.status(200).json({ success: true, data: req.pagination });
+            return res.status(200).json({ success: true, data: req.pagination });
         } catch (error) {
             console.log(error.message);
             res.status(500).json({ success: false, msg: 'Internal Server Error' });
