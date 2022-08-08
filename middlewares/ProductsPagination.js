@@ -4,16 +4,22 @@ function BlogsPagination(model) {
         let limit = parseInt(req.query.limit);
         let startIndex = (page - 1) * limit;
         let endIndex = (page) * limit;
-        let category = req.query.category;
+        let category = req.query.productcategory;
         let subCategory = req.query.subcategory;
         let query = {};
         let maxValue = parseInt(req.query.max);
         let minValue = parseInt(req.query.min);
+        if (!maxValue && !minValue) {
+            // maxValue = 1000000;
+            // minValue = 1;
+        }
         if (minValue > maxValue) {
             let temp = maxValue;
             maxValue = minValue;
             minValue = temp;
         }
+        let length;
+        console.log(minValue, maxValue);
         try {
             // store results here 
             let pagination = {
@@ -21,33 +27,48 @@ function BlogsPagination(model) {
                 next: null,
                 previous: null
             }
-            let length = await model.countDocuments() // length 
 
             pagination.length = length; // total num of items in the 
             pagination.current = page; // set current page 
 
 
-            // search by category for products
-            if (category || subCategory || minValue || maxValue) {
+            if (minValue && maxValue) {
                 query = {
-                    $and: [
-                        { category: { "$in": [category] } },
-                        { price: { $gte: minValue, $lte: maxValue } },
-                        { minPrice: { $gte: minValue, $lte: maxValue } },
-                        { subCategory: { "$in": [subCategory] } },
+                    price: { $gte: minValue, $lte: maxValue },
+                };
+                if (req.query.productcategory) {
+                    query = {
+                        $and: [
+                            { price: { $gte: minValue, $lte: maxValue } },
+                            { category: { "$in": [req.query.productcategory] } },
+                        ]
+                    }
+                }
+            }
+
+            // search by category for products
+            if (category) {
+                query = {
+                    $or: [
+                        // { category: { "$in": category } },
+                        { "name": { $regex: `${category}` } },
+                        // { price: { $gte: minValue, $lte: maxValue } },
+                        // { subCategory: { "$in": [subCategory] } },
                     ]
                 }
                 length = await model.find(query).countDocuments();
             }
             // if (category) {
-            //     query = { category: { "$in": [category] } }
-            //     length = await model.find(query).countDocuments();
+            //     query.$or = { category: { "$in": [category] } }
             // }
             // if (subCategory) {
-            //     query = { subCategory: { "$in": [subCategory] } };
-            //     length = await model.find(query).countDocuments();
+            //     query.$or = { subCategory: { "$in": [subCategory] } };
+            // }
+            // if (minValue && maxValue) {
+            //     query = { price: { $gte: minValue, $lte: maxValue } };
             // }
 
+            length = await model.find(query).countDocuments() // length 
 
             // pagination.results = await model.find();
             pagination.results = await model.find(query).skip(startIndex).limit(endIndex);

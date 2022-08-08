@@ -62,7 +62,7 @@ router.get('/personalised/:number',
             let products = await Product.find();
 
             let personalised = products.filter((product) => {
-                if (interests.includes(product.details.brand)) {
+                if (interests.includes(product.category)) {
                     return product;
                 }
             })
