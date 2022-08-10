@@ -2,118 +2,135 @@ const router = require("express").Router();
 const { body, validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 
+
 // importing middlewares
 const FetchUser = require("../../middlewares/FetchUser");
+const FetchAdmin = require('../../middlewares/FetchAdmin');
 
 // importing models
 const User = require("../../models/User");
 const Product = require("../../models/Product");
+const Cart = require('../../models/Cart');
 
-// route :: add item to cart
-router.post("/add", FetchUser, async (req, res) => {
-    // find if cart is already created for the user
+// add to cart 
+router.post('/add', FetchUser, async (req, res) => {
     try {
-        if (!mongoose.isValidObjectId(req.body.productid)) {
-            return res
-                .status(400)
-                .json({ success: false, msg: "Invaid Product Object id " });
-        }
-        let productid = new mongoose.Types.ObjectId(req.body.productid);
+        const { productid, quantity } = req.body;
 
-        // finding if user exists or not
-        let user = await User.findById(req.user.id);
-
-        // finding if product is exists or not
-        let product = await Product.findById(productid);
-
-        if (!product) {
-            return res.status(400).json({ success: false, msg: "Product Not found" });
+        if (quantity <= 1) {
+            quantity = 1;
         }
-        if (user && product) {
-            // update if exists
-            if (!user.cart.includes(req.body.productid)) {
-                await user.updateOne({ $push: { cart: product._id } });
-                await user.updateOne({ $push: { interests: product.category } }); // this is for personalisation of the data
-                return res
-                    .status(200)
-                    .json({ success: true, data: "Product Added to cart" });
-            } else {
-                return res
-                    .status(400)
-                    .json({ success: false, msg: "Product Already Exists" });
-            }
+
+        let cart = await Cart.findOneAndUpdate({ userid: req.user.id });
+        if (cart) {
+            let tempCart = cart;
+            tempCart.products.push({ productid: productid, quantity: quantity });
+            cart.updateOne({ $set: tempCart })
+            let saved = await cart.save();
+            res.status(200).json({ success: true, cart: saved });
         }
-        return res
-            .status(400)
-            .json({ success: false, msg: "something went wrong" });
+        // user.updateOne({ $push: { cart: product._id } });
+        else {
+            console.log('Not Found');
+            cart = new Cart({
+                userid: req.user.id,
+                products: [
+                    {
+                        productid: productid,
+                        quantity: quantity
+                    }
+                ]
+            })
+            let saved = await cart.save();
+            res.status(200).json({ success: true, cart: saved });
+        }
+
     } catch (error) {
-        console.log(error.message);
-        res.status(200).json({ success: false, msg: "Internal Server Error" });
+        res.status(500).json({ success: true, msg: "Internal Server Error" });
     }
-});
-
-// route :: delete item from cart
-router.delete("/delete", FetchUser, async (req, res) => {
-    // find if cart is already created for the user
+})
+// add to cart 
+router.delete('/remove', FetchUser, async (req, res) => {
     try {
-        if (!mongoose.isValidObjectId(req.body.productid)) {
-            return res
-                .status(400)
-                .json({ success: false, msg: "Invaid Product Object id " });
-        }
-        let productid = new mongoose.Types.ObjectId(req.body.productid);
+        const { productid } = req.body;
 
-        // finding if user exists or not
-        let user = await User.findById(req.user.id);
+        let cart = await Cart.findOneAndUpdate({ userid: req.user.id });
 
-        // finding if product is exists or not
-        let product = await Product.findById(productid);
+        if (cart) {
+            let tempCart = cart;
 
-        if (!product) {
-            return res.status(400).json({ success: false, msg: "Product Not found" });
+            let products = tempCart.products.filter((p) => p.productid != productid)
+            console.log(products)
+            tempCart.products = products;
+            cart.updateOne({ $set: tempCart })
+            let saved = await cart.save();
+            res.status(200).json({ success: true, cart: saved });
         }
-        if (user && product) {
-            // update if exists
-            if (user.cart.includes(req.body.productid)) {
-                await user.updateOne({ $pull: { cart: product._id } });
-                await user.updateOne({ $pull: { interests: product.category } }); // this is for personalisation of the data
-                return res
-                    .status(200)
-                    .json({ success: true, data: "Product Removed from cart" });
-            } else {
-                return res
-                    .status(200)
-                    .json({ success: false, data: "Product Not in cart" });
-            }
+        // user.updateOne({ $push: { cart: product._id } });
+        else {
+            res.status(200).json({ success: false, msg: "Unable to remove from the cart" });
         }
-        res.status(200).json({ success: true, data: "Something Went Wrong" });
+
     } catch (error) {
-        console.log(error.message);
-        res.status(200).json({ success: false, msg: "Internal Server Error" });
+        res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
-});
+})
 
+// update quantity 
+router.put('/update', FetchUser, async (req, res) => {
+    try {
+        let { products } = req.body;
+        let cart = Cart.find({ userid: req.user.id })
+        if (!cart) {
+            return res.status(400).json({ success: false, msg: "can't find cart" });
+        }
+        let tempCart = cart;
+        tempCart.products = products;
+        cart.updateOne({ $set: tempCart })
+
+    } catch (error) {
+        res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+})
 // route :: getall item from cart
 router.get("/getall", FetchUser, async (req, res) => {
     try {
-
-        let user = await User.findById(req.user.id);
-
-        if (!user) {
-            return res.status(400).json({ success: false, msg: "User Not Found" })
-        }
-
-        let products = await Product.find();
-
-        // filtering 
-
-        let list = products.filter((product) => {
-            if (user.cart.includes(product._id)) {
-                return product
-            }
-        })
-
-        return res.status(200).json({ success: true, products: list });
+        let data = await Cart.aggregate([
+            [
+                {
+                    $unwind: {
+                        path: '$products'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'products',
+                        localField: 'products.productid',
+                        foreignField: '_id',
+                        as: 'products.product'
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        products: {
+                            $push: '$products'
+                        }
+                    }
+                },
+                // {
+                //     $unwind: {
+                //         path: '$productdetails'
+                //     }
+                // },
+                // {
+                //     $addFields: {
+                //         'productdetails.products': '$products'
+                //     }
+                // },
+            ]
+        ])
+        return res.status(200).json({ success: true, products: data });
 
     } catch (error) {
 
@@ -122,4 +139,5 @@ router.get("/getall", FetchUser, async (req, res) => {
     }
 });
 
-module.exports = router;
+
+module.exports = router; 
