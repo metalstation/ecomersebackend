@@ -12,6 +12,10 @@ const SellSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    category: {
+        type: String,
+        required: false
+    },
     phone: {
         type: String,
         required: true
@@ -23,6 +27,11 @@ const SellSchema = new mongoose.Schema({
         location: { type: String },
         city: { type: String },
         _id: false,
+    },
+    images: {
+        type: Array,
+        default: [],
+        required: false
     }
 },
     { timestamps: true })

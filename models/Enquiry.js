@@ -9,7 +9,7 @@ const EnquirySchema = new mongoose.Schema(
     },
     productid: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Products",
       required: true,
     },
     status: {
@@ -19,6 +19,10 @@ const EnquirySchema = new mongoose.Schema(
     name: {
       type: String,
       required: false,
+    },
+    price: {
+      type: Number,
+      required: false
     },
     email: {
       type: String,

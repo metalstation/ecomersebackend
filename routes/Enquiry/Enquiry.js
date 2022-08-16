@@ -10,11 +10,14 @@ const Pagination = require("../../middlewares/Pagination");
 const User = require("../../models/User");
 const Product = require("../../models/Product");
 const Enquiry = require("../../models/Enquiry");
-const { request } = require("http");
 
-router.get("/", (req, res) => {
-  res.status(200).json({ success: false, msg: "welcome to the enquiry page" });
-});
+
+// Total routes 
+// 1. Add Enquiry :: user :: Done 
+// 2. Accept Enquiry :: admin :: 
+// 3. Give Price :: admin 
+// 4. Get User Enquiries :: user :: DONE 
+// 5. Get all Enquiries :: admin :: DONE
 
 // Route :: Post an Enquiry :: User Protected Route
 router.post("/add", FetchUser, async (req, res) => {
@@ -28,7 +31,7 @@ router.post("/add", FetchUser, async (req, res) => {
 
     // find if product exists
     let product = await Product.findById(productid);
-    let users = await User.findById(mongoose.Types.ObjectId(req.user));
+    let user = await User.findById(mongoose.Types.ObjectId(req.user.id));
     if (!product) {
       return res
         .status(400)
@@ -40,22 +43,25 @@ router.post("/add", FetchUser, async (req, res) => {
       userid: req.user.id,
       productid: productid,
       status: "pending",
-      name: users.name,
+      name: user.name,
+      price: null,
+      email: user.email,
       productname: product.name,
-      email: users.email,
-      phone: users.phone ? users.phone : req.body.phone,
+      email: user.email,
+      phone: user.phone
     });
 
     let newEnquiry = await enquiry.save();
 
     res.status(200).json({ success: true, data: newEnquiry });
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
     res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 });
 // getting all enquiry - by user
-router.get("/getall", FetchUser, async (req, res) => {
+router.get("/getuser", FetchUser, async (req, res) => {
+  console.log('Hello')
   try {
     const Data = await Enquiry.aggregate([
       {
@@ -71,7 +77,7 @@ router.get("/getall", FetchUser, async (req, res) => {
           userid: mongoose.Types.ObjectId(req.user.id),
         },
       },
-    ]);
+    ]).sort({ createdAt: -1 });
     return res.status(200).json({ success: true, data: Data });
   } catch (error) {
     console.log(error.message);
@@ -122,20 +128,23 @@ router.get("/getall", FetchAdmin, async (req, res) => {
 });
 
 // updating status - by admin
-router.patch("/accept/:id", FetchAdmin, async (req, res) => {
+router.put("/update", FetchAdmin, async (req, res) => {
   try {
-    const status = req.body;
-    const options = { new: true };
-    const id = req.params.id;
+    const { status, price, id } = req.body;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, msg: "Invalid Object" });
     }
-    let enquiry = await Enquiry.findById(id);
+    let enquiry = await Enquiry.findByIdAndUpdate(id);
     if (!enquiry) {
       return res.status(400).json({ success: false, msg: "Enquiry Not Found" });
     }
-    const a = await Enquiry.findByIdAndUpdate(id, status, options);
-
+    if (price) {
+      enquiry.price = price;
+    }
+    if (status) {
+      enquiry.status = status;
+    }
+    const a = await enquiry.save();
     return res.status(200).json({ success: true, data: a });
   } catch (error) {
     console.log(error.message);
@@ -144,25 +153,25 @@ router.patch("/accept/:id", FetchAdmin, async (req, res) => {
 });
 
 // get specific user's enquiry - by admin
-router.get("/getSpecificUser/:id", FetchAdmin, async (req, res) => {
-  try {
-    const enquiry = await Enquiry.find({ userid: req.params.id });
-    return res.status(200).json({ success: true, data: enquiry });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
-});
+// router.get("/getSpecificUser/:id", FetchAdmin, async (req, res) => {
+//   try {
+//     const enquiry = await Enquiry.find({ userid: req.params.id });
+//     return res.status(200).json({ success: true, data: enquiry });
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(500).json({ success: false, msg: "Internal Server Error" });
+//   }
+// });
 
 // get specific product's enquiry - by admin
-router.get("/getSpecificProduct/:id", FetchAdmin, async (req, res) => {
-  try {
-    const enquiry = await Enquiry.find({ productid: req.params.id });
-    return res.status(200).json({ success: true, data: enquiry });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
-});
+// router.get("/getSpecificProduct/:id", FetchAdmin, async (req, res) => {
+//   try {
+//     const enquiry = await Enquiry.find({ productid: req.params.id });
+//     return res.status(200).json({ success: true, data: enquiry });
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(500).json({ success: false, msg: "Internal Server Error" });
+//   }
+// });
 
 module.exports = router; 

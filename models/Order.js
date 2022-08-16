@@ -9,7 +9,9 @@ const BuySchema = new mongoose.Schema({
     products: [
         {
             productid: {
-                type: String,
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Products',
+                required: true
             },
             quantity: {
                 type: Number,
@@ -30,10 +32,14 @@ const BuySchema = new mongoose.Schema({
         type: Number,
         required: false
     },
-    location: {
-        type: Object,
-        required: true
-    }
+    address: {
+        pincode: { type: String },
+        state: { type: String },
+        town: { type: String },
+        location: { type: String },
+        city: { type: String },
+        _id: false,
+    },
 
 },
     { timestamps: true })
