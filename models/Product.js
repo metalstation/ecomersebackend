@@ -54,7 +54,9 @@ const ProductSchema = new mongoose.Schema({
             _id: false,
         },
     ],
-
+    isFeatured: {
+        type: Boolean,
+    },
     isDeleted: {
         type: Boolean,
         required: false,

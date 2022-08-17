@@ -3,16 +3,12 @@ const mongoose = require('mongoose');
 const SellSchema = new mongoose.Schema({
     email: {
         type: String,
-        required: true
+        required: false
     },
     fullName: {
         type: String,
     },
-    type: {
-        type: String,
-        required: true
-    },
-    category: {
+    business: {
         type: String,
         required: false
     },
@@ -20,13 +16,17 @@ const SellSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    details: {
-        pincode: { type: String },
-        state: { type: String },
-        town: { type: String },
-        location: { type: String },
-        city: { type: String },
-        _id: false,
+    city: {
+        type: String,
+        required: false
+    },
+    subcategory: {
+        type: String,
+        required: false
+    },
+    category: {
+        type: String,
+        required: false
     },
     images: {
         type: Array,
