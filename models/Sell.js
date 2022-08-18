@@ -5,9 +5,6 @@ const SellSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    fullName: {
-        type: String,
-    },
     business: {
         type: String,
         required: false
@@ -20,13 +17,24 @@ const SellSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    subcategory: {
-        type: String,
-        required: false
-    },
     category: {
         type: String,
         required: false
+    },
+    material: {
+        type: String,
+        required: false
+    },
+    quantity: {
+        type: String,
+        required: false
+    },
+    unit: {
+        type: String,
+        required: false
+    },
+    others: {
+        type: String,
     },
     images: {
         type: Array,

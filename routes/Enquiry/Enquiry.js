@@ -61,7 +61,7 @@ router.post("/add", FetchUser, async (req, res) => {
 });
 // getting all enquiry - by user
 router.get("/getuser", FetchUser, async (req, res) => {
-  console.log('Hello')
+  // console.log('Hello')
   try {
     const Data = await Enquiry.aggregate([
       {

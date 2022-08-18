@@ -24,19 +24,20 @@ router.post(
   upload.array('images', 5),
   async (req, res) => {
     try {
-      const { email, fullName, business, phone, city, type, category, subcategory } = req.body;
+      const { email, business, phone, city, category, material, quantity, unit, others } = req.body;
       if (!phone) {
         return res.status(400).json({ success: false, msg: "Type is Needed" });
       }
       let sell = new Sell({
         email: email,
-        fullName: fullName,
         phone: phone,
         city: city,
         business: business,
-        type: type,
+        material: material,
+        quantity: quantity,
+        unit: unit,
+        others: others,
         category: category,
-        subcategory: subcategory
       })
 
       if (req.files) {

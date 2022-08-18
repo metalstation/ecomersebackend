@@ -4,11 +4,12 @@ function BlogsPagination(model) {
         let limit = parseInt(req.query.limit);
         let startIndex = (page - 1) * limit;
         let endIndex = (page) * limit;
-        let category = req.query.productcategory;
+        let category = req.query.category;
         let subCategory = req.query.subcategory;
         let query = {};
         let maxValue = parseInt(req.query.max);
         let minValue = parseInt(req.query.min);
+
         if (!maxValue && !minValue) {
             // maxValue = 1000000;
             // minValue = 1;
@@ -19,7 +20,7 @@ function BlogsPagination(model) {
             minValue = temp;
         }
         let length;
-        console.log(minValue, maxValue);
+        // console.log(minValue, maxValue);
         try {
             // store results here 
             let pagination = {
@@ -28,36 +29,49 @@ function BlogsPagination(model) {
                 previous: null
             }
 
+            // console.log(category)
             pagination.length = length; // total num of items in the 
             pagination.current = page; // set current page 
-
-
-            if (minValue && maxValue) {
-                query = {
-                    price: { $gte: minValue, $lte: maxValue },
-                };
-                if (req.query.productcategory) {
-                    query = {
-                        $and: [
-                            { price: { $gte: minValue, $lte: maxValue } },
-                            { category: { "$in": [req.query.productcategory] } },
-                        ]
-                    }
-                }
-            }
 
             // search by category for products
             if (category) {
                 query = {
                     $or: [
-                        // { category: { "$in": category } },
-                        { "name": { $regex: `${category}` } },
+                        { category: { "$in": [category] } },
+                        // { subCategory: { "$in": [subCategory] } }
                         // { price: { $gte: minValue, $lte: maxValue } },
                         // { subCategory: { "$in": [subCategory] } },
                     ]
                 }
-                length = await model.find(query).countDocuments();
             }
+
+            if (minValue && maxValue) {
+                query = {
+                    $or:
+                        [
+                            { price: { $gte: minValue, $lte: maxValue } },
+                            { minPrice: { $gte: minValue } },
+                            // { maxPrice: { $lte: minValue } }
+                        ]
+
+                };
+                if (req.query.category) {
+                    query = {
+                        $and: [
+                            {
+                                $or: [
+                                    { price: { $gte: minValue, $lte: maxValue } },
+                                    { minPrice: { $gte: minValue } },
+                                    // { maxPrice: { $lte: maxValue } },
+                                ]
+                            },
+                            { category: { "$in": [category] } },
+                            // { subCategory: { "$in": [subCategory] } }
+                        ]
+                    }
+                }
+            }
+
             // if (category) {
             //     query.$or = { category: { "$in": [category] } }
             // }
