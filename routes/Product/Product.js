@@ -88,6 +88,7 @@ router.post('/add',
                 width,
                 color,
                 weight,
+                isFeatured,
                 diamerter,
                 price,
                 minPrice,
@@ -97,13 +98,14 @@ router.post('/add',
             // save a product 
             let product = new Product({
                 name: name,
+                isFeatured: isFeatured,
                 shortDescription: shortDescription,
                 description: description,
                 category: category,
                 subCategory: subCategory,
                 price: price ? price : null,
-                minPrice: minPrice ? minPrice : price,
-                maxPrice: maxPrice ? maxPrice : price,
+                minPrice: minPrice,
+                maxPrice: maxPrice,
                 table: JSON.parse(table),
                 details: {
                     length: length,
@@ -192,15 +194,15 @@ router.put('/edit',
 
 
         try {
-
-            let product = await Product.findByIdAndUpdate(req.body.id);
-
+            let product = await Product.findById(req.body.id);
+            // console.log(product)
             if (!product) {
                 return res.status(400).json({ success: false, msg: "Product is Not Available" })
             }
-            if (!req.body.category || !req.body.subCategory) {
-                return res.status(400).json({ success: false, msg: "Category Required" });
-            }
+            product = await Product.findByIdAndUpdate(req.body.id);
+            // if (!req.body.category || !req.body.subCategory) {
+            //     return res.status(400).json({ success: false, msg: "Category Required" });
+            // }
 
             const { name,
                 shortDescription,
@@ -225,19 +227,19 @@ router.put('/edit',
             product.description = description ? description : product.description
             product.category = category ? category : product.category
             product.subCategory = subCategory ? subCategory : product.subCategory
-            product.price = price ? price : product.price ? product.price : null
-            product.minPrice = minPrice ? minPrice : product.minPrice
-            product.maxPrice = maxPrice ? minPrice : product.minPrice
+            product.price = price
+            product.minPrice = minPrice
+            product.maxPrice = maxPrice
             product.table = table ? JSON.stringify(table) : product.table
 
-            details.length = length ? length : product.length
-            details.height = height ? height : product.height
-            details.width = width ? width : product.width
-            details.weight = weight ? weight : product.weight
-            details.diamerter = diamerter ? diamerter : product.diamerter
-            details.color = color ? color : product.color
+            product.details.length = length ? length : product.length
+            product.details.height = height ? height : product.height
+            product.details.width = width ? width : product.width
+            product.details.weight = weight ? weight : product.weight
+            product.details.diamerter = diamerter ? diamerter : product.diamerter
+            product.details.color = color ? color : product.color
 
-            if (req.files) {
+            if (req.files[0]) {
                 product.img = req.files.map(element => {
                     return element.path
                 })
@@ -250,6 +252,8 @@ router.put('/edit',
             res.status(500).json({ success: false, msg: 'Internal Server Error' });
         }
     })
+
+
 
 module.exports = router;
 

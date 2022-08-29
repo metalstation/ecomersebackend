@@ -146,6 +146,47 @@ router.get('/getuser',
         }
     })
 
+
+router.get('/getall', FetchAdmin,
+    async (req, res) => {
+        console.log('Orders')
+        try {
+            // let orders = await Order.find();
+            let orders = await Order.aggregate([
+                [
+                    {
+                        $unwind: {
+                            path: '$products'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'products',
+                            localField: 'products.productid',
+                            foreignField: '_id',
+                            as: 'products.product'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: '$_id',
+                            // products: {
+                            //     $push: '$products'
+                            // },
+                            items: {
+                                $push: '$$ROOT'
+                            },
+                        }
+                    },
+                ]
+            ])
+            res.status(200).json({ success: true, orders: orders });
+        } catch (error) {
+            console.log(error.message);
+            res.status(500).json({ success: false, msg: "Internal Server Error" });
+        }
+    })
+
 router.get('/:id', FetchUser, async (req, res) => {
     try {
         let id = new mongoose.Types.ObjectId(req.params.id);
@@ -208,45 +249,7 @@ router.get('/:id', FetchUser, async (req, res) => {
         }
         return res.status(400).json({ success: false, msg: "Autherization Error" })
     } catch (error) {
-
+        return res.status(500).json({ success: false, msg: 'Internal Server Error' })
     }
 })
-router.get('/getall',
-    async (req, res) => {
-        try {
-            // let orders = await Order.find();
-            let orders = await Order.aggregate([
-                [
-                    {
-                        $unwind: {
-                            path: '$products'
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: 'products',
-                            localField: 'products.productid',
-                            foreignField: '_id',
-                            as: 'products.product'
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: '$_id',
-                            // products: {
-                            //     $push: '$products'
-                            // },
-                            items: {
-                                $push: '$$ROOT'
-                            },
-                        }
-                    },
-                ]
-            ])
-            res.status(200).json({ success: true, orders: orders });
-        } catch (error) {
-            console.log(error.message);
-            res.status(500).json({ success: false, msg: "Internal Server Error" });
-        }
-    })
 module.exports = router; 

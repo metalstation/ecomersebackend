@@ -13,6 +13,8 @@ const Orders = require('./Orders/index')
 const Feedback = require('./Feedback/index');
 const Cart = require('./Cart/index');
 const Enquiry = require('./Enquiry/index');
+// admin access routes for accessing user specific data too 
+const AdminAccess = require('./Admin/index');
 
 //authentication routes 
 router.use('/auth', Auth);
@@ -46,6 +48,9 @@ router.use('/cart', Cart);
 
 // enquiry routes
 router.use('/enquiry', Enquiry);
+
+// admin access routes
+router.use('/access', AdminAccess);
 
 // base root 
 router.get('/', (req, res) => {
