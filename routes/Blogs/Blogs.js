@@ -75,7 +75,7 @@ router.post('/add',
                 let newCategories = [];
 
                 // let aCategory = JSON.parse(category); 
-
+                category = new Array(category);
                 category.forEach(element => {
                     if (!allCategories.blogs.includes(element)) {
                         newCategories.push(element);
