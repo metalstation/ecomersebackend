@@ -124,7 +124,7 @@ router.post('/add',
 
         } catch (error) {
             console.log(error.message);
-            res.status(500).json({ success: false, msg: 'Internal Server Error' });
+            res.status(500).json({ success: false, msg: 'Internal Server Error', error: error.message });
         }
 
     })
