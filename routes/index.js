@@ -54,7 +54,7 @@ router.use('/access', AdminAccess);
 
 // base root 
 router.get('/', (req, res) => {
-    res.send('Hello👋')
+    res.send('Hello 👋')
 })
 
 module.exports = router; 
